@@ -157,17 +157,9 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
                         state.image_depth[i + j * state.image_width] = z_buff;
 
                         for(int k = 0; k < state.floats_per_vertex; k++){
-                            float temp_k = 0;
-                            
                             switch(state.interp_rules[k]){
                                 case interp_type::flat:
                                     fragment_data.data[k] = v0.data[k];
-                                    break;
-                                case interp_type::smooth:
-                                    temp_k = ((alpha_prime / v0.gl_Position[3]) + (beta_prime / v1.gl_Position[3]) + (gamma_prime / v2.gl_Position[3]));
-                                    alpha_prime = alpha_true / (temp_k * v0.gl_Position[3]);
-                                    beta_prime = beta_true / (temp_k * v1.gl_Position[3]);
-                                    gamma_prime = gamma_true / (temp_k * v2.gl_Position[3]);
                                     break;
                                 case interp_type::noperspective:
                                     fragment_data.data[k] = ((alpha_prime * v0.data[k]) + (beta_prime * v1.data[k]) + (gamma_prime * v2.data[k]));

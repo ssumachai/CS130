@@ -70,8 +70,45 @@ void render(driver_state& state, render_type type)
             }
             break;
         case render_type::indexed:
+            triangles = state.num_triangles * 3;
+
+            for(int i = 0; i < triangles; i += 3){
+                for(int j = 0; j < 3; ++j){
+                    triArray[j].data = state.vertex_data + (state.index_data[i + j] * state.floats_per_vertex);
+                }
+                for(int k = 0; k < 3; ++k){
+                    vertexStuff.data = triArray[k].data;
+                    state.vertex_shader(vertexStuff, triArray[k], state.uniform_data);
+                }
+                rasterize_triangle(state, triArray[0], triArray[1], triArray[2]);
+            }
+            break;
         case render_type::fan:
+            for(int i = 0; i < state.num_vertices; ++i){
+                for(int j = 0; j < 3; ++j){
+                    if(j != 0){
+                        triArray[j].data = state.vertex_data + ((state.floats_per_vertex) * (i + j));
+                    }
+                    else{
+                        triArray[j].data = state.vertex_data + (j * state.floats_per_vertex);
+                    }
+                    vertexStuff.data = triArray[j].data;
+                    state.vertex_shader(vertexStuff, triArray[j], state.uniform_data);
+                }
+                rasterize_triangle(state, triArray[0], triArray[1], triArray[2]);
+            }
+            break;
         case render_type::strip:
+            for(int i = 0; i < state.num_vertices - 2; ++i){
+                for(int j = 0; j < 3; ++j){
+                    triArray[j].data = state.vertex_data + ((i + j) * state.floats_per_vertex);
+                }
+                for(int k = 0; k < 3; ++k){
+                    vertexStuff.data = triArray[k].data;
+                    state.vertex_shader(vertexStuff, triArray[k], state.uniform_data);
+                }
+                rasterize_triangle(state, triArray[0], triArray[1], triArray[2]);
+            }
             break;
         default:
             break;
@@ -86,13 +123,11 @@ void render(driver_state& state, render_type type)
 void clip_triangle(driver_state& state, const data_geometry& v0,
     const data_geometry& v1, const data_geometry& v2,int face)
 {
-    if(face==6)
-    {
+    if(face == 6){
         rasterize_triangle(state, v0, v1, v2);
         return;
     }
-    std::cout<<"TODO: implement clipping. (The current code passes the triangle through without clipping them.)"<<std::endl;
-    clip_triangle(state, v0, v1, v2,face+1);
+    clip_triangle(state, v0, v1, v2, face + 1);
 }
 
 // Rasterize the triangle defined by the three vertices in the "in" array.  This
